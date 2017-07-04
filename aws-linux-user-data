@@ -2,8 +2,12 @@
 
 yum update -y
 yum install krb5-workstation -y
-yum install clamav -y
-yum install clamav-update -y
+yum install pam_krb5 -y
+yum install epel-release -y
+# clam packages installed by MailScanner:
+#yum install clamav -y
+#yum install clamav-update -y
+#yum install clamav-scanner-systemd -y
 yum install git -y
 
 yum install postfix -y
@@ -15,4 +19,7 @@ echo "fs-6b7abca2.efs.eu-west-1.amazonaws.com:/ /home/vmail nfs nfsvers=4.1,rsiz
 mount -a
 
 # Install MailScanner:
+curl https://s3.amazonaws.com/msv5/release/MailScanner-5.0.3-7.rhel.tar.gz > MailScanner-5.0.3-7.rhel.tar.gz
+tar -zxvf MailScanner-5.0.3-7.rhel.tar.gz
+printf '\n2\nY\nY\nY\nY\nY\nY\nY\n0\n' | MailScanner-5.0.3-7/install.sh
 
