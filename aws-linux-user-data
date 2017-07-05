@@ -23,3 +23,12 @@ curl https://s3.amazonaws.com/msv5/release/MailScanner-5.0.3-7.rhel.tar.gz > Mai
 tar -zxvf MailScanner-5.0.3-7.rhel.tar.gz
 printf '\n2\nY\nY\nY\nY\nY\nY\nY\n0\n' | MailScanner-5.0.3-7/install.sh
 
+# Install certbot:
+git clone https://github.com/certbot/certbot /opt/certbot
+# Get cert:
+#
+### NEED TO ENSURE DNS ENTRY DONE FIRST.  NEED TO USE STATIC EIP FOR REVERSE DNS, SO ASSOCIATE EIP WITH THIS NEW HOST BEFORE THIS LINE
+/opt/certbot/certbot-auto -n --os-packages-only
+/opt/certbot/certbot-auto certonly -n --agree-tos --rsa-key-size 4096 --renew-by-default -m tony@mulini.org --standalone -d mailhub.mulini.net --test-cert
+# Various fixes:
+
