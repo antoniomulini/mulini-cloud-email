@@ -1,5 +1,7 @@
 #!/bin/bash
 
+CONFBUCKET="s3://mulini.net-configfiles"
+
 yum update -y
 yum install krb5-workstation -y
 yum install pam_krb5 -y
@@ -12,6 +14,9 @@ yum install git -y
 
 yum install postfix -y
 yum install dovecot -y
+
+yum install python2-pip -y
+pip install --upgrade awscli
 
 # Set up vmail environment
 useradd -c 'Virtual Mail' -d /home/vmail -u 1002 -s /sbin/nologin -U vmail
@@ -31,4 +36,13 @@ git clone https://github.com/certbot/certbot /opt/certbot
 /opt/certbot/certbot-auto -n --os-packages-only
 /opt/certbot/certbot-auto certonly -n --agree-tos --rsa-key-size 4096 --renew-by-default -m tony@mulini.org --standalone -d mailhub.mulini.net --test-cert
 # Various fixes:
+
+# Copy config files
+aws s3 cp ${CONFBUCKET}/krb5.conf /etc/krb5.conf
+aws s3 cp ${CONFBUCKET}/MailScanner/defaults /etc/MailScanner/defaults
+aws s3 cp ${CONFBUCKET}/MailScanner/conf.d/* /etc/MailScanner/conf.d/
+aws s3 cp ${CONFBUCKET}/clamav/scan.conf /etc/clamd.d/scan.conf
+aws s3 cp ${CONFBUCKET}/dovecot/dovecot.conf /etc/dovecot/dovecot.conf
+aws s3 cp ${CONFBUCKET}/dovecot/conf.d/* /etc/dovecot/conf.d/
+aws s3 cp ${CONFBUCKET}/postfix/* /etc/postfix/
 
