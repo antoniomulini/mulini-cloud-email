@@ -1,0 +1,65 @@
+#!/bin/bash
+
+# bootstrap script for trad postfix/MailScanner/dovecot email stack on CentOS 7
+
+MYDOMAIN=mulini.net
+CONFBUCKET="s3://${MYDOMAIN}-configfiles"
+
+yum update -y
+yum install krb5-workstation -y
+yum install pam_krb5 -y
+yum install epel-release -y
+yum -y install clamav-server clamav-data clamav-update clamav-filesystem clamav clamav-scanner-systemd clamav-devel clamav-lib clamav-server-systemd
+yum install git -y
+
+yum install postfix -y
+yum install dovecot -y
+
+yum install python2-pip -y
+pip install --upgrade awscli
+
+# Set up vmail environment
+useradd -c 'Virtual Mail' -d /home/vmail -u 1002 -s /sbin/nologin -U vmail
+# REMEMBER TO UNCOMMENT FOR PROD!
+#echo "fs-6b7abca2.efs.eu-west-1.amazonaws.com:/ /home/vmail nfs nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2 0 0" >> /etc/fstab
+#mount -a
+
+# Install MailScanner:
+curl https://s3.amazonaws.com/msv5/release/MailScanner-5.0.3-7.rhel.tar.gz > MailScanner-5.0.3-7.rhel.tar.gz
+tar -zxvf MailScanner-5.0.3-7.rhel.tar.gz
+printf '\n2\nY\nY\nY\nY\nY\nY\nY\n0\n' | MailScanner-5.0.3-7/install.sh
+
+# Install certbot:
+git clone https://github.com/certbot/certbot /opt/certbot
+# Get cert:
+#
+### NEED TO ENSURE DNS ENTRY DONE FIRST.  NEED TO USE STATIC EIP FOR REVERSE DNS, SO ASSOCIATE EIP WITH THIS NEW HOST BEFORE THIS LINE
+/opt/certbot/certbot-auto -n --os-packages-only
+/opt/certbot/certbot-auto certonly -n --agree-tos --rsa-key-size 4096 --renew-by-default -m tony@mulini.org --standalone -d mailhub.${MYDOMAIN}
+# Various fixes:
+
+usermod -G clamscan -a postfix
+
+setsebool -P antivirus_can_scan_system 1
+
+# Copy config files
+aws s3 cp ${CONFBUCKET}/krb5.conf /etc/krb5.conf
+aws s3 cp ${CONFBUCKET}/MailScanner/defaults /etc/MailScanner/defaults
+aws s3 cp ${CONFBUCKET}/MailScanner/conf.d/ /etc/MailScanner/conf.d/ --recursive
+aws s3 cp ${CONFBUCKET}/clamav/scan.conf /etc/clamd.d/scan.conf
+aws s3 cp ${CONFBUCKET}/dovecot/dovecot.conf /etc/dovecot/dovecot.conf
+aws s3 cp ${CONFBUCKET}/dovecot/conf.d/ /etc/dovecot/conf.d/ --recursive
+aws s3 cp ${CONFBUCKET}/postfix/ /etc/postfix/ --recursive
+aws s3 cp ${CONFBUCKET}/pam.d/dovecot /etc/pam.d/dovecot
+
+# Start stuff:
+systemctl enable clamd@scan.service
+systemctl start clamd@scan.service
+systemctl enable MailScanner.service
+systemctl start MailScanner.service
+systemctl enable dovecot.service
+systemctl start dovecot.service
+
+# Set up auto update of git and certs:
+echo "0 2 * * 1 sudo cd /opt/certbot && sudo git pull" >> /var/spool/cron/root
+echo "30 2 * * 1 sudo /opt/certbot/certbot-auto renew --standalone >> /var/log/certbot-renew.log && sudo service postfix reload && sudo dovecot reload" >> /var/spool/cron/root
