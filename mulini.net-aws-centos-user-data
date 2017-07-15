@@ -41,6 +41,7 @@ git clone https://github.com/certbot/certbot /opt/certbot
 usermod -G clamscan -a postfix
 
 setsebool -P antivirus_can_scan_system 1
+setenforce permissive
 
 # Copy config files
 aws s3 cp ${CONFBUCKET}/krb5.conf /etc/krb5.conf
