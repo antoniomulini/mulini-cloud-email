@@ -6,6 +6,13 @@ MYDOMAIN=mulini.net
 CONFBUCKET="s3://${MYDOMAIN}-configfiles"
 # TO DO: lookup mailhub.MYDOMAIN current public IP.  Needs host or nslookup installing? Do that first via interim public IP?
 MYPUBLICIP=52.17.235.146
+MYREGION=`curl http://169.254.169.254/latest/meta-data/placement/availability-zone/`
+MYREGION=${MYREGION:0:${#MYREGION}-1}
+
+# Install AWS CloudWatch agent and configure
+curl https://s3.amazonaws.com//aws-cloudwatch/downloads/latest/awslogs-agent-setup.py -O
+chmod +x ./awslogs-agent-setup.py
+./awslogs-agent-setup.py -n -r ${MYREGION} -c ${CONFBUCKET}/${MYDOMAIN}.awslogs.conf
 
 # Install all the stuff
 yum update -y
@@ -51,10 +58,7 @@ aws s3 cp ${CONFBUCKET}/pam.d/dovecot /etc/pam.d/dovecot
 
 ### Assign EIP to me, so I can get to Internet resources and generate cert
 # This will break current mailhub instance, so do it right before cert generation and services come up
-MYREGION=`curl http://169.254.169.254/latest/meta-data/placement/availability-zone/`
-MYREGION=${MYREGION:0:${#MYREGION}-1}
 MYINSTANCEID=`curl http://169.254.169.254/latest/meta-data/instance-id`
-
 aws ec2 associate-address --region ${MYREGION} --instance-id ${MYINSTANCEID} --public-ip ${MYPUBLICIP}
 ###
 
