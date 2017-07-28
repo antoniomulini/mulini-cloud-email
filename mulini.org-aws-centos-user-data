@@ -68,6 +68,7 @@ aws ec2 associate-address --region ${MYREGION} --instance-id ${MYINSTANCEID} --p
 /opt/certbot/certbot-auto certonly -n --agree-tos --rsa-key-size 4096 --renew-by-default -m tony@mulini.org --standalone -d mailhub.${MYDOMAIN}
 
 # Start stuff:
+systemctl enable awslogs.service
 systemctl enable clamd@scan.service
 systemctl start clamd@scan.service
 systemctl restart postfix.service
