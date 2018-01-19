@@ -1,1 +1,4 @@
 configfiles*/*
+terraform/.terraform/*
+terraform/*.tfstate*
+terraform/homeip.auto.tfvars
