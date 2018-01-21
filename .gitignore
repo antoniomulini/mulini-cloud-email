@@ -2,3 +2,5 @@ configfiles*/*
 terraform/.terraform/*
 terraform/*.tfstate*
 terraform/homeip.auto.tfvars
+terraform/instp.auto.tfvars
+terraform/test/*

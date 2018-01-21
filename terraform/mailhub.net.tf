@@ -28,6 +28,25 @@ resource "aws_subnet" "sn_imap_eu2" {
 	}
 }
 
+resource "aws_security_group" "default" {
+	name = "default"
+	description = "default VPC security group"
+	
+	ingress {
+		from_port	= "0"
+		to_port		= "0"
+		protocol		= "-1"
+		self		= "true"
+	}
+	
+	egress {
+		from_port	= "0"
+		to_port		= "0"
+		protocol	= "-1"
+		cidr_blocks = ["0.0.0.0/0"]
+	}
+}
+
 resource "aws_security_group" "sg_internet_to_mailhub" {
 	name = "sg_internet_to_mailhub"
 	description = "Controls inbound access to mailhub.mulini.org"
@@ -135,8 +154,14 @@ resource "aws_instance" "mailhub" {
 	subnet_id = "${aws_subnet.sn_imap_eu1.id}"
 	vpc_security_group_ids = [
 		"${aws_security_group.sg_access_from_home1.id}",
-		"${aws_security_group.sg_internet_to_mailhub.id}"
+		"${aws_security_group.sg_internet_to_mailhub.id}",
+		"${aws_security_group.default.id}"
 	]
+	key_name = "${var.mykp}"
+	iam_instance_profile = "${var.mailhub_instp}"
+	root_block_device {
+		volume_type = "gp2"
+	}
 	tags {
 		Name = "mailhub.${var.domain}"
 	}
