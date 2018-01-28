@@ -72,6 +72,13 @@ resource "aws_security_group" "sg_internet_to_mailhub" {
 		cidr_blocks = ["0.0.0.0/0"]
 	}
 	
+	ingress {
+		from_port	= "80"
+		to_port		= "80"
+		protocol	= "tcp"
+		cidr_blocks = ["0.0.0.0/0"]
+	}
+	
 	egress {
 		from_port	= "0"
 		to_port		= "0"
@@ -152,6 +159,7 @@ resource "aws_instance" "mailhub" {
 	ami = "${data.aws_ami.centos.id}"
 	instance_type = "t2.small"
 	subnet_id = "${aws_subnet.sn_imap_eu1.id}"
+	associate_public_ip_address = true
 	vpc_security_group_ids = [
 		"${aws_security_group.sg_access_from_home1.id}",
 		"${aws_security_group.sg_internet_to_mailhub.id}",
@@ -162,6 +170,9 @@ resource "aws_instance" "mailhub" {
 	root_block_device {
 		volume_type = "gp2"
 	}
+	
+	user_data = "${file("../${var.domain}-aws-centos-user-data")}"
+	
 	tags {
 		Name = "mailhub.${var.domain}"
 	}
