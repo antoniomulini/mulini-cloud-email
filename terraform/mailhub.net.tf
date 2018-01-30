@@ -175,5 +175,6 @@ resource "aws_instance" "mailhub" {
 	
 	tags {
 		Name = "mailhub.${var.domain}"
+		Inspector = "InspectMe"
 	}
 }

@@ -26,6 +26,10 @@ yum install dovecot -y
 yum install python2-pip -y
 pip install --upgrade awscli
 
+# Install AWS Inspector agent:
+curl https://d1wk0tztpsntt1.cloudfront.net/linux/latest/install -O
+bash install
+
 # Set up vmail environment
 useradd -c 'Virtual Mail' -d /home/vmail -u 1002 -s /sbin/nologin -U vmail
 # REMEMBER TO UNCOMMENT FOR PROD!
