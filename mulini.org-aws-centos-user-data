@@ -26,6 +26,10 @@ yum install dovecot -y
 yum install python2-pip -y
 pip install --upgrade awscli
 
+# Install AWS Inspector agent:
+curl https://d1wk0tztpsntt1.cloudfront.net/linux/latest/install -O
+bash install
+
 # Set up vmail environment
 useradd -c 'Virtual Mail' -d /home/vmail -u 1002 -s /sbin/nologin -U vmail
 # REMEMBER TO UNCOMMENT FOR PROD!
@@ -36,6 +40,8 @@ mount -a
 curl https://s3.amazonaws.com/msv5/release/MailScanner-5.0.3-7.rhel.tar.gz > MailScanner-5.0.3-7.rhel.tar.gz
 tar -zxvf MailScanner-5.0.3-7.rhel.tar.gz
 printf '\n2\nY\nY\nY\nY\nY\nY\nY\n0\n' | MailScanner-5.0.3-7/install.sh
+
+chown postfix:postfix quarantine
 
 # Install certbot:
 git clone https://github.com/certbot/certbot /opt/certbot
