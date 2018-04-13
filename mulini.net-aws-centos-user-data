@@ -14,6 +14,10 @@ curl https://s3.amazonaws.com//aws-cloudwatch/downloads/latest/awslogs-agent-set
 chmod +x ./awslogs-agent-setup.py
 ./awslogs-agent-setup.py -n -r ${MYREGION} -c ${CONFBUCKET}/${MYDOMAIN}.awslogs.conf
 
+# Secure SSHD
+echo "" >> /etc/ssh/sshd_config
+echo "PermitRootLogin no" >> /etc/ssh/sshd_config
+
 # Install all the stuff
 yum update -y
 yum install krb5-workstation -y
