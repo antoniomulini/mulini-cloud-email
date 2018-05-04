@@ -1,4 +1,7 @@
-
+#
+# Domain name is now taken from Terraform workspace name to ensure separation between test and prod
+# i.e. domain = ${terraform.workspace}
+# Remember this!
 
 provider "aws" {
 	region = "${var.region}"
@@ -171,10 +174,10 @@ resource "aws_instance" "mailhub" {
 		volume_type = "gp2"
 	}
 	
-	user_data = "${file("../${var.domain}-aws-centos-user-data")}"
+	user_data = "${file("../${terraform.workspace}-aws-centos-user-data")}"
 	
 	tags {
-		Name = "mailhub.${var.domain}"
+		Name = "mailhub.${terraform.workspace}"
 		Inspector = "InspectMe"
 	}
 }

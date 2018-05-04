@@ -1,4 +1,4 @@
-variable "domain" {} # Which email domain we are provisioning the server for
+# variable "domain" {} # Which email domain we are provisioning the server for.  No longer used - now uses Terraform workspace name - remember!
 
 variable "homeip" {} # Home IP address for management access.  Not stored in repo
 
