@@ -45,7 +45,7 @@ curl https://s3.amazonaws.com/msv5/release/MailScanner-5.0.3-7.rhel.tar.gz > Mai
 tar -zxvf MailScanner-5.0.3-7.rhel.tar.gz
 printf '\n2\nY\nY\nY\nY\nY\nY\nY\n0\n' | MailScanner-5.0.3-7/install.sh
 
-chown postfix:postfix quarantine
+chown postfix:postfix /var/spool/MailScanner/quarantine
 
 # Install certbot:
 git clone https://github.com/certbot/certbot /opt/certbot
