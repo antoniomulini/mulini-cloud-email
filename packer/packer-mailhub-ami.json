@@ -1,0 +1,53 @@
+{
+    "variables": {
+        "region":         "eu-west-1"
+    },
+    "builders": [
+        {
+            "ami_name": "mulini-mailhub-ami-{{timestamp}}",
+            "instance_type": "t2.small",
+            "region": "{{user `region`}}",
+            "source_ami_filter": {
+              "filters": {
+              "virtualization-type": "hvm",
+              "name": "CentOS Linux 7 x86_64 HVM EBS*",
+              "root-device-type": "ebs"
+              },
+              "owners": ["679593333241"],
+              "most_recent": true
+            },
+            "ssh_username": "centos",
+            "type": "amazon-ebs",
+			"subnet_id": "subnet-724c032a",
+			"associate_public_ip_address": true
+        }
+    ],
+    "provisioners": [
+        {
+            "type": "shell",
+            "inline":[
+				"sleep 30",
+				
+				"sudo yum update -y",
+				
+				"sudo yum install krb5-workstation pam_krb5 epel-release -y",
+				"sudo yum -y install clamav-server clamav-data clamav-update clamav-filesystem clamav clamav-scanner-systemd clamav-devel clamav-lib clamav-server-systemd",
+				"sudo yum install git postfix dovecot certbot python2-pip opendkim -y",
+				"sudo pip install --upgrade awscli",
+				
+				"sudo curl https://d1wk0tztpsntt1.cloudfront.net/linux/latest/install -O",
+				"sudo bash install",
+				
+				"sudo curl https://s3.amazonaws.com/msv5/release/MailScanner-5.0.3-7.rhel.tar.gz -O",
+				"sudo tar -zxvf MailScanner-5.0.3-7.rhel.tar.gz",
+				"sudo printf '\\n2\\nY\\nY\\nY\\nY\\nY\\nY\\nY\\n0\\n' | sudo MailScanner-5.0.3-7/install.sh",
+				
+				"sudo curl https://s3.amazonaws.com//aws-cloudwatch/downloads/latest/awslogs-agent-setup.py -O",
+				"sudo chmod +x ./awslogs-agent-setup.py",
+				
+				"sudo echo \"\" | sudo tee -a /etc/ssh/sshd_config > /dev/null",
+				"sudo echo \"PermitRootLogin no\" | sudo tee -a /etc/ssh/sshd_config > /dev/null"
+            ]
+        }
+    ]
+}

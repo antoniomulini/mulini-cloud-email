@@ -8,53 +8,107 @@ CONFBUCKET="s3://${MYDOMAIN}-configfiles"
 MYPUBLICIP=52.17.235.146
 MYREGION=`curl http://169.254.169.254/latest/meta-data/placement/availability-zone/`
 MYREGION=${MYREGION:0:${#MYREGION}-1}
+MYINSTANCEID=`curl http://169.254.169.254/latest/meta-data/instance-id`
 
 # Install AWS CloudWatch agent and configure
-curl https://s3.amazonaws.com//aws-cloudwatch/downloads/latest/awslogs-agent-setup.py -O
-chmod +x ./awslogs-agent-setup.py
-./awslogs-agent-setup.py -n -r ${MYREGION} -c ${CONFBUCKET}/${MYDOMAIN}.awslogs.conf
+#curl https://s3.amazonaws.com//aws-cloudwatch/downloads/latest/awslogs-agent-setup.py -O
+#chmod +x ./awslogs-agent-setup.py
+/home/centos/awslogs-agent-setup.py -n -r ${MYREGION} -c ${CONFBUCKET}/${MYDOMAIN}.awslogs.conf
 
 # Secure SSHD
-echo "" >> /etc/ssh/sshd_config
-echo "PermitRootLogin no" >> /etc/ssh/sshd_config
+#echo "" >> /etc/ssh/sshd_config
+#echo "PermitRootLogin no" >> /etc/ssh/sshd_config
 
 # Install all the stuff
-yum update -y
-yum install krb5-workstation -y
-yum install pam_krb5 -y
-yum install epel-release -y
-yum -y install clamav-server clamav-data clamav-update clamav-filesystem clamav clamav-scanner-systemd clamav-devel clamav-lib clamav-server-systemd
-yum install git -y
-yum install postfix -y
-yum install dovecot -y
-yum install python2-pip -y
-pip install --upgrade awscli
+#yum update -y
+#yum install krb5-workstation -y
+#yum install pam_krb5 -y
+#yum install epel-release -y
+#yum -y install clamav-server clamav-data clamav-update clamav-filesystem clamav clamav-scanner-systemd clamav-devel clamav-lib clamav-server-systemd
+#yum install git -y
+#yum install postfix -y
+#yum install dovecot -y
+#yum install certbot -y
+#yum install python2-pip -y
+#yum install opendkim -y
+#pip install --upgrade awscli
 
 # Install AWS Inspector agent:
-curl https://d1wk0tztpsntt1.cloudfront.net/linux/latest/install -O
-bash install
+#curl https://d1wk0tztpsntt1.cloudfront.net/linux/latest/install -O
+#bash install
 
 # Set up vmail environment
 useradd -c 'Virtual Mail' -d /home/vmail -u 1002 -s /sbin/nologin -U vmail
-# REMEMBER TO UNCOMMENT FOR PROD!
-#echo "fs-6b7abca2.efs.eu-west-1.amazonaws.com:/ /home/vmail nfs nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2 0 0" >> /etc/fstab
-#mount -a
+
+# Get main mailstore EFS volume DNS name from MailstoreMount tag:
+MYMAILSTORE=`aws ec2 --region ${MYREGION} describe-instances --instance-ids=${MYINSTANCEID} --query "Reservations[*].Instances[*].Tags[?Key=='MailstoreMount'].Value" | grep "amazonaws.com" | tr -d [:blank:]\"`
+
+echo "${MYMAILSTORE}:/ /home/vmail nfs nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2 0 0" >> /etc/fstab
+
+# This line should only be needed if we're mounting a fresh EFS volume
+
+# Same again, but for backup EFS voluyme:
+mkdir /mnt/vmail-backup
+MYBACKUPMAILSTORE=`aws ec2 --region ${MYREGION} describe-instances --instance-ids=${MYINSTANCEID} --query "Reservations[*].Instances[*].Tags[?Key=='BackupMailstoreMount'].Value" | grep "amazonaws.com" | tr -d [:blank:]\"`
+
+echo "${MYBACKUPMAILSTORE}:/ /mnt/vmail-backup nfs nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2 0 0" >> /etc/fstab
+
+mount -a
+
+# This line should only be needed if we're mounting a fresh EFS volume
+chown vmail:vmail /home/vmail
+chown vmail:vmail /mnt/vmail-backup
 
 # Install MailScanner:
-curl https://s3.amazonaws.com/msv5/release/MailScanner-5.0.3-7.rhel.tar.gz > MailScanner-5.0.3-7.rhel.tar.gz
-tar -zxvf MailScanner-5.0.3-7.rhel.tar.gz
-printf '\n2\nY\nY\nY\nY\nY\nY\nY\n0\n' | MailScanner-5.0.3-7/install.sh
+#curl https://s3.amazonaws.com/msv5/release/MailScanner-5.0.3-7.rhel.tar.gz > MailScanner-5.0.3-7.rhel.tar.gz
+#tar -zxvf MailScanner-5.0.3-7.rhel.tar.gz
+#printf '\n2\nY\nY\nY\nY\nY\nY\nY\n0\n' | MailScanner-5.0.3-7/install.sh
 
 chown postfix:postfix /var/spool/MailScanner/quarantine
 
 # Install certbot:
-git clone https://github.com/certbot/certbot /opt/certbot
-/opt/certbot/certbot-auto -n --os-packages-only
+#git clone https://github.com/certbot/certbot /opt/certbot
+#/opt/certbot/certbot-auto -n --os-packages-only
 
 usermod -G clamscan -a postfix
 
+chgrp clamscan /var/spool/MailScanner/incoming
+chmod g+w /var/spool/MailScanner/incoming
+
 setsebool -P antivirus_can_scan_system 1
 setenforce permissive
+
+# Set up opendkim
+mkdir /etc/opendkim/keys/${MYDOMAIN}
+
+echo >> /etc/opendkim.conf << EOF "
+AutoRestart             Yes
+AutoRestartRate         10/1h
+Canonicalization        relaxed/simple
+ExternalIgnoreList      refile:/etc/opendkim/TrustedHosts
+InternalHosts           refile:/etc/opendkim/TrustedHosts
+KeyTable                refile:/etc/opendkim/KeyTable
+LogWhy                  Yes
+Mode                    sv
+PidFile                 /var/run/opendkim/opendkim.pid
+SignatureAlgorithm      rsa-sha256
+SigningTable            refile:/etc/opendkim/SigningTable
+Socket                  inet:8891@localhost
+Syslog                  Yes
+SyslogSuccess           Yes
+TemporaryDirectory      /var/tmp
+UMask                   022
+UserID                  opendkim:opendkim"
+EOF
+
+# Configure KeyTable
+echo "default._domainkey.${MYDOMAIN} ${MYDOMAIN}:default:/etc/opendkim/keys/${MYDOMAIN}/default" >> /etc/opendkim/KeyTable
+
+# Configure SigningTable
+echo "*@${MYDOMAIN} default._domainkey.${MYDOMAIN}" >> /etc/opendkim/SigningTable
+
+# Configure TrustedHosts
+echo "${MYDOMAIN}" >> /etc/opendkim/TrustedHosts
 
 # Copy config files
 aws s3 cp ${CONFBUCKET}/krb5.conf /etc/krb5.conf
@@ -65,28 +119,35 @@ aws s3 cp ${CONFBUCKET}/dovecot/dovecot.conf /etc/dovecot/dovecot.conf
 aws s3 cp ${CONFBUCKET}/dovecot/conf.d/ /etc/dovecot/conf.d/ --recursive
 aws s3 cp ${CONFBUCKET}/postfix/ /etc/postfix/ --recursive
 aws s3 cp ${CONFBUCKET}/pam.d/dovecot /etc/pam.d/dovecot
+aws s3 cp ${CONFBUCKET}/opendkim/default /etc/opendkim/keys/${MYDOMAIN}/default
+
+chown -R opendkim:opendkim /etc/opendkim/keys/${MYDOMAIN}
+chmod 600 /etc/opendkim/keys/${MYDOMAIN}/default
 
 ### Assign EIP to me, so I can get to Internet resources and generate cert
 # This will break current mailhub instance, so do it right before cert generation and services come up
-MYINSTANCEID=`curl http://169.254.169.254/latest/meta-data/instance-id`
 aws ec2 associate-address --region ${MYREGION} --instance-id ${MYINSTANCEID} --public-ip ${MYPUBLICIP}
 ###
 
 # Get cert:
 #
-### NEED TO ENSURE EIP ASSOCIATED ITH THIS NEW HOST BEFORE THIS LINE
-/opt/certbot/certbot-auto certonly -n --agree-tos --rsa-key-size 4096 --renew-by-default -m tony@mulini.org --standalone -d mailhub.${MYDOMAIN}
+### NEED TO ENSURE EIP ASSOCIATED WITH THIS NEW HOST BEFORE THIS LINE
+/bin/certbot certonly -n --agree-tos --rsa-key-size 4096 --renew-by-default -m tony@mulini.org --standalone -d mailhub.${MYDOMAIN}
 
 # Start stuff:
 systemctl enable awslogs.service
 systemctl enable clamd@scan.service
 systemctl start clamd@scan.service
+systemctl enable opendkim.service
+systemctl start opendkim.service
 systemctl restart postfix.service
-systemctl enable MailScanner.service
-systemctl start MailScanner.service
+chkconfig mailscanner on
+service mailscanner restart
+#systemctl enable mailscanner.service
+#systemctl start mailscanner.service
 systemctl enable dovecot.service
 systemctl start dovecot.service
 
 # Set up auto update of git and certs:
-echo "0 2 * * 1 sudo cd /opt/certbot && sudo git pull" >> /var/spool/cron/root
-echo "30 2 * * 1 sudo /opt/certbot/certbot-auto renew --standalone >> /var/log/certbot-renew.log && sudo service postfix reload && sudo dovecot reload" >> /var/spool/cron/root
+# echo "0 2 * * 1 sudo cd /opt/certbot && sudo git pull" >> /var/spool/cron/root
+echo "30 2 * * 1 sudo /bin/certbot renew --standalone >> /var/log/certbot-renew.log && sudo service postfix reload && sudo service dovecot reload" >> /var/spool/cron/root

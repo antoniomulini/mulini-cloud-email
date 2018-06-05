@@ -2,7 +2,7 @@
 
 LOGFILE="/var/log/backupmail";
 SOURCEDIR="/home/vmail";
-DESTDIR="/mail-backup";
+DESTDIR="/mnt/vmail-backup";
 
 echo "`/bin/date` Backing up from ${SOURCEDIR} to ${DESTDIR}..." >> $LOGFILE;
 

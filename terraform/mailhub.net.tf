@@ -139,10 +139,54 @@ resource "aws_security_group" "sg_access_from_home1" {
 	}
 }
 
-# Get latest CentOS AMI to build from
+# EFS volumes for mail store:
+# Main
+
+resource "aws_efs_file_system" "main_efs" {
+	encrypted = true
+	# Use default EFS key for now
+	
+	tags {
+		Name = "${terraform.workspace}-mailstore-main"
+	}
+}
+
+resource "aws_efs_mount_target" "main_efs_mount_target1" {
+	file_system_id = "${aws_efs_file_system.main_efs.id}"
+	subnet_id = "${aws_subnet.sn_imap_eu1.id}"
+}
+
+resource "aws_efs_mount_target" "main_efs_mount_target2" {
+	file_system_id = "${aws_efs_file_system.main_efs.id}"
+	subnet_id = "${aws_subnet.sn_imap_eu2.id}"
+}
+
+# Backup
+
+resource "aws_efs_file_system" "backup_efs" {
+	encrypted = true
+	# Use default EFS key for now
+	
+	tags {
+		Name = "${terraform.workspace}-mailstore-backup"
+	}
+}
+
+resource "aws_efs_mount_target" "backup_efs_mount_target1" {
+	file_system_id = "${aws_efs_file_system.backup_efs.id}"
+	subnet_id = "${aws_subnet.sn_imap_eu1.id}"
+}
+
+resource "aws_efs_mount_target" "backup_efs_mount_target2" {
+	file_system_id = "${aws_efs_file_system.backup_efs.id}"
+	subnet_id = "${aws_subnet.sn_imap_eu2.id}"
+}
+
+# Use our own CentOS 7 AMI with pre-installed packages (in particular MailScanner)
+# instead of the main Centos AMI
 
 output "desc" {
-	value = "${data.aws_ami.centos.description}"
+	value = "${data.aws_ami.centos.name}"
 }
 
 data "aws_ami" "centos" {
@@ -150,10 +194,10 @@ data "aws_ami" "centos" {
 
   filter {
     name   = "name"
-    values = ["CentOS Linux 7 x86_64 HVM EBS*"]
+    values = ["mulini-mailhub-ami-*"]
   }
 
-  owners     = ["679593333241"]
+  owners     = ["self"]
 }
 
 # Create mailhub server:
@@ -178,6 +222,8 @@ resource "aws_instance" "mailhub" {
 	
 	tags {
 		Name = "mailhub.${terraform.workspace}"
+		MailstoreMount = "${aws_efs_file_system.main_efs.dns_name}"
+		BackupMailstoreMount = "${aws_efs_file_system.backup_efs.dns_name}"
 		Inspector = "InspectMe"
 	}
 }

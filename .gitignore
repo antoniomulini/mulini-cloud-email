@@ -4,3 +4,4 @@ terraform/*.tfstate*
 terraform/homeip.auto.tfvars
 terraform/instp.auto.tfvars
 terraform/test/*
+dkim_notes.txt
