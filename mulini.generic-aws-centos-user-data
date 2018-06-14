@@ -2,13 +2,18 @@
 
 # bootstrap script for trad postfix/MailScanner/dovecot email stack on CentOS 7
 
-MYDOMAIN=mulini.net
-CONFBUCKET="s3://${MYDOMAIN}-configfiles"
-# TO DO: lookup mailhub.MYDOMAIN current public IP.  Needs host or nslookup installing? Do that first via interim public IP?
-MYPUBLICIP=52.17.235.146
 MYREGION=`curl http://169.254.169.254/latest/meta-data/placement/availability-zone/`
 MYREGION=${MYREGION:0:${#MYREGION}-1}
 MYINSTANCEID=`curl http://169.254.169.254/latest/meta-data/instance-id`
+
+# Instance needs to have a "Name" tag that is mailhub.domain.top
+MYNAME=`aws ec2 --region ${MYREGION} describe-instances --instance-ids=${MYINSTANCEID} --query "Reservations[*].Instances[*].Tags[?Key=='Name'].Value" | tr -d [:space:][]\"`
+#Remove hostname part from MYNAME to get domain name
+MYDOMAIN=`echo $MYNAME | sed -r {"s/^\w+\.//"}`
+
+CONFBUCKET="s3://${MYDOMAIN}-configfiles"
+# Lookup my eventual public IP.  Will be re-associated to this host later
+MYPUBLICIP=`dig @8.8.4.4 ${MYNAME} A +short`
 
 # Install AWS CloudWatch agent and configure
 #curl https://s3.amazonaws.com//aws-cloudwatch/downloads/latest/awslogs-agent-setup.py -O
