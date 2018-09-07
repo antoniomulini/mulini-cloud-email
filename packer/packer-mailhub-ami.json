@@ -45,6 +45,9 @@
 				"sudo curl https://s3.amazonaws.com//aws-cloudwatch/downloads/latest/awslogs-agent-setup.py -O",
 				"sudo chmod +x ./awslogs-agent-setup.py",
 				
+				"sudo curl https://raw.githubusercontent.com/antoniomulini/mulini-cloud-email/master/backupmail.sh -O",
+				"sudo chmod +x ./backupmail.sh",
+				
 				"sudo echo \"\" | sudo tee -a /etc/ssh/sshd_config > /dev/null",
 				"sudo echo \"PermitRootLogin no\" | sudo tee -a /etc/ssh/sshd_config > /dev/null"
             ]
