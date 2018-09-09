@@ -204,7 +204,7 @@ data "aws_ami" "centos" {
 
 resource "aws_instance" "mailhub" {
 	ami = "${data.aws_ami.centos.id}"
-	instance_type = "t2.small"
+	instance_type = "t3.small"
 	subnet_id = "${aws_subnet.sn_imap_eu1.id}"
 	associate_public_ip_address = true
 	vpc_security_group_ids = [
