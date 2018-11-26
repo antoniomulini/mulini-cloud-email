@@ -75,8 +75,9 @@ chown postfix:postfix /var/spool/MailScanner/quarantine
 #git clone https://github.com/certbot/certbot /opt/certbot
 #/opt/certbot/certbot-auto -n --os-packages-only
 
+# Fix some weird permissions stuff
 usermod -G clamscan -a postfix
-
+chgrp clamscan /var/run/clamd.scan
 chgrp clamscan /var/spool/MailScanner/incoming
 chmod g+w /var/spool/MailScanner/incoming
 
@@ -137,7 +138,18 @@ aws ec2 associate-address --region ${MYREGION} --instance-id ${MYINSTANCEID} --p
 # Get cert:
 #
 ### NEED TO ENSURE EIP ASSOCIATED WITH THIS NEW HOST BEFORE THIS LINE
-/bin/certbot certonly -n --agree-tos --rsa-key-size 4096 --renew-by-default -m tony@mulini.org --standalone -d mailhub.${MYDOMAIN}
+#/bin/certbot certonly -n --agree-tos --rsa-key-size 4096 --renew-by-default -m tony@mulini.org --standalone -d mailhub.${MYDOMAIN}
+# Get cert using acme.sh now
+# Fix for old certbot dirs:
+mkdir -p /etc/letsencrypt/live/mailhub.${MYDOMAIN}
+# Update account email:
+/root/.acme.sh/acme.sh --update-account --accountemail tony@mulini.org
+# Standalone cert request:
+root/.acme.sh/acme.sh --issue --standalone -k 4096  \
+    --key-file /etc/letsencrypt/live/mailhub.${MYDOMAIN}/privkey.pem \
+    --fullchain-file /etc/letsencrypt/live/mailhub.${MYDOMAIN}/fullchain.pem \
+    -d mailhub.${MYDOMAIN}
+# TO DO: better protect privkey.pem so can only be read by dovecot & postfix
 
 # Start stuff:
 systemctl enable awslogs.service
@@ -155,4 +167,4 @@ systemctl start dovecot.service
 
 # Set up auto update of git and certs:
 # echo "0 2 * * 1 sudo cd /opt/certbot && sudo git pull" >> /var/spool/cron/root
-echo "30 2 * * 1 sudo /bin/certbot renew --standalone >> /var/log/certbot-renew.log && sudo service postfix reload && sudo service dovecot reload" >> /var/spool/cron/root
+# echo "30 2 * * 1 sudo /bin/certbot renew --standalone >> /var/log/certbot-renew.log && sudo service postfix reload && sudo service dovecot reload" >> /var/spool/cron/root

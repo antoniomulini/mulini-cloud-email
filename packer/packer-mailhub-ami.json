@@ -32,8 +32,9 @@
 				
 				"sudo yum install krb5-workstation pam_krb5 epel-release -y",
 				"sudo yum -y install clamav-server clamav-data clamav-update clamav-filesystem clamav clamav-scanner-systemd clamav-devel clamav-lib clamav-server-systemd",
-				"sudo yum install git postfix dovecot certbot python2-pip opendkim bind-utils -y",
-				"sudo pip install --upgrade awscli",
+				"sudo yum install git postfix dovecot socat python2-pip opendkim bind-utils -y",
+                "sudo pip install --upgrade awscli",
+                "sudo curl https://get.acme.sh | sudo sh",
 				
 				"sudo curl https://d1wk0tztpsntt1.cloudfront.net/linux/latest/install -O",
 				"sudo bash install",
