@@ -6,3 +6,4 @@ terraform/instp.auto.tfvars
 terraform/test/*
 dkim_notes.txt
 s3synccmd.sh
+temp

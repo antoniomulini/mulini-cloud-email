@@ -165,6 +165,5 @@ service mailscanner restart
 systemctl enable dovecot.service
 systemctl start dovecot.service
 
-# Set up auto update of git and certs:
-# echo "0 2 * * 1 sudo cd /opt/certbot && sudo git pull" >> /var/spool/cron/root
-# echo "30 2 * * 1 sudo /bin/certbot renew --standalone >> /var/log/certbot-renew.log && sudo service postfix reload && sudo service dovecot reload" >> /var/spool/cron/root
+# Set up daily backup to separate EFS mount:
+echo "5 0 * * * /home/centos/backupmail.sh > /dev/null" >> /var/spool/cron/root
