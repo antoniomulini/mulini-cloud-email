@@ -24,6 +24,7 @@ resource "aws_lambda_permission" "processGDAlert_allowCWE" {
   function_name = "${aws_lambda_function.processGDAlert.function_name}"
   principal     = "events.amazonaws.com"
   source_arn    = "arn:aws:events:eu-west-1:${data.aws_caller_identity.current.account_id}:rule/GuardDutyEvent"
+  qualifier = "${aws_lambda_alias.latest_alias.name}"
 }
 
 resource "aws_lambda_alias" "latest_alias" {
