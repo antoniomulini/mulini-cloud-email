@@ -16,31 +16,7 @@ CONFBUCKET="s3://${MYDOMAIN}-configfiles"
 MYPUBLICIP=`dig @8.8.4.4 ${MYNAME} A +short`
 
 # Install AWS CloudWatch agent and configure
-#curl https://s3.amazonaws.com//aws-cloudwatch/downloads/latest/awslogs-agent-setup.py -O
-#chmod +x ./awslogs-agent-setup.py
 /home/centos/awslogs-agent-setup.py -n -r ${MYREGION} -c ${CONFBUCKET}/${MYDOMAIN}.awslogs.conf
-
-# Secure SSHD
-#echo "" >> /etc/ssh/sshd_config
-#echo "PermitRootLogin no" >> /etc/ssh/sshd_config
-
-# Install all the stuff
-#yum update -y
-#yum install krb5-workstation -y
-#yum install pam_krb5 -y
-#yum install epel-release -y
-#yum -y install clamav-server clamav-data clamav-update clamav-filesystem clamav clamav-scanner-systemd clamav-devel clamav-lib clamav-server-systemd
-#yum install git -y
-#yum install postfix -y
-#yum install dovecot -y
-#yum install certbot -y
-#yum install python2-pip -y
-#yum install opendkim -y
-#pip install --upgrade awscli
-
-# Install AWS Inspector agent:
-#curl https://d1wk0tztpsntt1.cloudfront.net/linux/latest/install -O
-#bash install
 
 # Set up vmail environment
 useradd -c 'Virtual Mail' -d /home/vmail -u 1002 -s /sbin/nologin -U vmail
@@ -65,15 +41,7 @@ chown vmail:vmail /home/vmail
 chown vmail:vmail /mnt/vmail-backup
 
 # Install MailScanner:
-#curl https://s3.amazonaws.com/msv5/release/MailScanner-5.0.3-7.rhel.tar.gz > MailScanner-5.0.3-7.rhel.tar.gz
-#tar -zxvf MailScanner-5.0.3-7.rhel.tar.gz
-#printf '\n2\nY\nY\nY\nY\nY\nY\nY\n0\n' | MailScanner-5.0.3-7/install.sh
-
 chown postfix:postfix /var/spool/MailScanner/quarantine
-
-# Install certbot:
-#git clone https://github.com/certbot/certbot /opt/certbot
-#/opt/certbot/certbot-auto -n --os-packages-only
 
 # Fix some weird permissions stuff
 usermod -G clamscan -a postfix
@@ -126,6 +94,9 @@ aws s3 cp ${CONFBUCKET}/dovecot/conf.d/ /etc/dovecot/conf.d/ --recursive
 aws s3 cp ${CONFBUCKET}/postfix/ /etc/postfix/ --recursive
 aws s3 cp ${CONFBUCKET}/pam.d/dovecot /etc/pam.d/dovecot
 aws s3 cp ${CONFBUCKET}/opendkim/default /etc/opendkim/keys/${MYDOMAIN}/default
+aws s3 cp ${CONFBUCKET}/checkclam.sh /home/centos/
+
+chmod u+x /home/centos/checkclam.sh
 
 chown -R opendkim:opendkim /etc/opendkim/keys/${MYDOMAIN}
 chmod 600 /etc/opendkim/keys/${MYDOMAIN}/default
@@ -167,3 +138,5 @@ systemctl start dovecot.service
 
 # Set up daily backup to separate EFS mount:
 echo "5 0 * * * /home/centos/backupmail.sh > /dev/null" >> /var/spool/cron/root
+# Set up monitoring for clamd issues:
+echo "* * * * * /home/centos/checkclam.sh > /dev/null" >> /var/spool/cron/root
