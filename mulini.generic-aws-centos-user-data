@@ -114,9 +114,9 @@ aws ec2 associate-address --region ${MYREGION} --instance-id ${MYINSTANCEID} --p
 # Fix for old certbot dirs:
 mkdir -p /etc/letsencrypt/live/mailhub.${MYDOMAIN}
 # Update account email:
-/root/.acme.sh/acme.sh --update-account --accountemail tony@mulini.org
+#/root/.acme.sh/acme.sh --update-account --accountemail tony@mulini.org
 # Standalone cert request:
-root/.acme.sh/acme.sh --issue --standalone -k 4096  \
+/root/.acme.sh/acme.sh --issue --standalone -k 4096  \
     --key-file /etc/letsencrypt/live/mailhub.${MYDOMAIN}/privkey.pem \
     --fullchain-file /etc/letsencrypt/live/mailhub.${MYDOMAIN}/fullchain.pem \
     -d mailhub.${MYDOMAIN}
