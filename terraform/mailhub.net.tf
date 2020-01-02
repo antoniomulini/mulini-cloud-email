@@ -31,6 +31,35 @@ resource "aws_subnet" "sn_imap_eu2" {
 	}
 }
 
+resource "aws_network_acl" "mailhub_acl" {
+  	vpc_id = "${aws_vpc.vpc_eu1.id}"
+	subnet_ids = [
+		"${aws_subnet.sn_imap_eu1.id}",
+		"${aws_subnet.sn_imap_eu2.id}"
+	]
+  	tags {
+		Name = "Mailhub_ACL"
+  	}
+}
+
+resource "aws_network_acl_rule" "in999" {
+	network_acl_id = "${aws_network_acl.mailhub_acl.id}"
+  	rule_number    = 999
+	egress         = false
+  	protocol       = "all"
+  	rule_action    = "allow"
+  	cidr_block     = "0.0.0.0/0" 
+}
+
+resource "aws_network_acl_rule" "out999" {
+	network_acl_id = "${aws_network_acl.mailhub_acl.id}"
+  	rule_number    = 999
+	egress         = true
+  	protocol       = "all"
+  	rule_action    = "allow"
+  	cidr_block     = "0.0.0.0/0"
+}
+
 resource "aws_security_group" "default" {
 	name = "default"
 	description = "default VPC security group"
@@ -204,7 +233,7 @@ data "aws_ami" "centos" {
 
 resource "aws_instance" "mailhub" {
 	ami = "${data.aws_ami.centos.id}"
-	instance_type = "t3.small"
+	instance_type = "t3.medium"
 	subnet_id = "${aws_subnet.sn_imap_eu1.id}"
 	associate_public_ip_address = true
 	vpc_security_group_ids = [
