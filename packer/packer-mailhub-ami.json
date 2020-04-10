@@ -13,7 +13,7 @@
               "name": "CentOS Linux 7 x86_64 HVM EBS*",
               "root-device-type": "ebs"
               },
-              "owners": ["679593333241"],
+              "owners": ["461800378586"],
               "most_recent": true
             },
             "ssh_username": "centos",
@@ -33,6 +33,8 @@
 				"sudo yum install krb5-workstation pam_krb5 epel-release -y",
 				"sudo yum install git postfix dovecot socat python2-pip opendkim bind-utils -y",
                 "sudo pip install --upgrade awscli",
+                "sudo yum install -y https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm",
+                "sudo systemctl enable amazon-ssm-agent",
                 "sudo curl https://get.acme.sh | sudo sh",
 				
 				"sudo curl https://d1wk0tztpsntt1.cloudfront.net/linux/latest/install -O",
