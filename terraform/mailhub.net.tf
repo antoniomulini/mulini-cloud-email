@@ -247,7 +247,7 @@ resource "aws_instance" "mailhub" {
 		volume_type = "gp2"
 	}
 	
-	user_data = "${file("../mulini.generic-aws-centos-user-data")}"
+	user_data = "${file("../mulini.generic-aws-alin2-user-data")}"
 	
 	tags {
 		Name = "mailhub.${terraform.workspace}"
