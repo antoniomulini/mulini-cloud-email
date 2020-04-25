@@ -1,0 +1,12 @@
+
+table: gd_block_nacl
+    partition key: NACL_Id?
+    sort key: nacl_rule_no
+        cidrBlock: x.x.x.x/32  # Always a /32
+        timeBlocked: timestamp #
+    sort key: nacl_state
+        gdBlockCounter: integer     # Next free slot in NACL.  Always check if free before trying to fill
+        gdBlockStartAt: integer     # block rules start at this sequence number
+        gdBlockEndAt: integer       # block rules end at this sequence number.  gdBlockCounter goes back to gdBlockStartAt when this slot is filled
+        gdBlockAge: integer Days    # Remove blocked IPs after this many days
+

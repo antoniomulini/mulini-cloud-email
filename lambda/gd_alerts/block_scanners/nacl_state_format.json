@@ -1,0 +1,9 @@
+{
+    "gdNacl": {
+        "naclId": "string",
+        "gdBlockCounter": "integer",
+        "gdBlockStartAt": "integrer",
+        "gdBlockEndAt": "Integer",
+        "gdBlockAge": "Integer Days"
+    }
+}

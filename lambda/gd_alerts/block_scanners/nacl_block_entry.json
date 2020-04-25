@@ -1,0 +1,5 @@
+{
+    "ruleNumber": "number",
+    "cidrBlock": "x.x.x.x/32",
+    "timeBlocked": "timestamp"
+}
