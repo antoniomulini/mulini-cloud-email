@@ -1,4 +1,9 @@
-configfiles*/*
+configfiles*/MailScanner/*
+configfiles*/opendkim/*
+configfiles*/postfix/*
+configfiles*/checkclam.sh
+configfiles*/krb5.conf
+configfiles*/mulini.*
 terraform/.terraform/*
 terraform/*.tfstate*
 terraform/homeip.auto.tfvars
