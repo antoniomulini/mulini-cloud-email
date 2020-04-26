@@ -1,4 +1,10 @@
-configfiles*/*
+configfiles*/MailScanner/*
+configfiles*/opendkim/*
+configfiles*/postfix/*
+configfiles*/checkclam.sh
+configfiles*/krb5.conf
+configfiles*/mulini.*
+configfiles*/dovecot/conf.d/dovecot-ldap.conf.ext
 terraform/.terraform/*
 terraform/*.tfstate*
 terraform/homeip.auto.tfvars
