@@ -7,6 +7,9 @@ provider "aws" {
 	region = "${var.region}"
 }
 
+locals {
+	domain_name = "${terraform.workspace}"
+}
 
 resource "aws_vpc" "vpc_eu1" {
 	cidr_block = "10.1.0.0/16"
@@ -247,7 +250,7 @@ resource "aws_instance" "mailhub" {
 		volume_type = "gp2"
 	}
 	
-	user_data = "${file("../mulini.generic-aws-alin2-user-data")}"
+	user_data = "${file("../mailhub-aws-alin2-user-data")}"
 	
 	tags {
 		Name = "mailhub.${terraform.workspace}"

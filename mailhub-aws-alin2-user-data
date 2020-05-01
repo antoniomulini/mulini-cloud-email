@@ -95,32 +95,35 @@ aws s3 cp ${CONFBUCKET}/dovecot/dovecot.conf /etc/dovecot/dovecot.conf
 aws s3 cp ${CONFBUCKET}/dovecot/conf.d/ /etc/dovecot/conf.d/ --recursive
 aws s3 cp ${CONFBUCKET}/postfix/ /etc/postfix/ --recursive
 aws s3 cp ${CONFBUCKET}/pam.d/dovecot /etc/pam.d/dovecot
-aws s3 cp ${CONFBUCKET}/opendkim/default /etc/opendkim/keys/${MYDOMAIN}/default
+aws s3 cp ${CONFBUCKET}/opendkim/default /etc/opendkim/keys/${MYDOMAIN}/default # TO DO: move to Secrets Manager
 aws s3 cp ${CONFBUCKET}/checkclam.sh /home/centos/
+
+# TO DO: get secrets from Secrets Manager (LDAP passwords, DKIM private key)
 
 chmod u+x /home/centos/checkclam.sh
 
-chown -R opendkim:opendkim /etc/opendkim/keys/${MYDOMAIN}
-chmod 600 /etc/opendkim/keys/${MYDOMAIN}/default
+chown -R opendkim:opendkim /etc/opendkim/keys/mailhub
+chmod 600 /etc/opendkim/keys/mailhub/default
 
 ### Assign EIP to me, so I can get to Internet resources and generate cert
 # This will break current mailhub instance, so do it right before cert generation and services come up
 aws ec2 associate-address --region ${MYREGION} --instance-id ${MYINSTANCEID} --public-ip ${MYPUBLICIP}
 ###
 
+sleep 10 # wait for AWS to catch up before next step
+
 # Get cert:
 #
 ### NEED TO ENSURE EIP ASSOCIATED WITH THIS NEW HOST BEFORE THIS LINE
-#/bin/certbot certonly -n --agree-tos --rsa-key-size 4096 --renew-by-default -m tony@mulini.org --standalone -d mailhub.${MYDOMAIN}
 # Get cert using acme.sh now
 # Fix for old certbot dirs:
-mkdir -p /etc/letsencrypt/live/mailhub.${MYDOMAIN}
+mkdir -p /etc/letsencrypt/live/mailhub
 # Update account email:
 #/root/.acme.sh/acme.sh --update-account --accountemail tony@mulini.org
 # Standalone cert request:
 /root/.acme.sh/acme.sh --issue --standalone -k 4096  \
-    --key-file /etc/letsencrypt/live/mailhub.${MYDOMAIN}/privkey.pem \
-    --fullchain-file /etc/letsencrypt/live/mailhub.${MYDOMAIN}/fullchain.pem \
+    --key-file /etc/letsencrypt/live/mailhub/privkey.pem \
+    --fullchain-file /etc/letsencrypt/live/mailhub/fullchain.pem \
     -d mailhub.${MYDOMAIN}
 # TO DO: better protect privkey.pem so can only be read by dovecot & postfix
 
