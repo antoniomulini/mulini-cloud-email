@@ -87,16 +87,29 @@ echo "*@${MYDOMAIN} default._domainkey.${MYDOMAIN}" >> /etc/opendkim/SigningTabl
 echo "${MYDOMAIN}" >> /etc/opendkim/TrustedHosts
 
 # Copy config files
-aws s3 cp ${CONFBUCKET}/krb5.conf /etc/krb5.conf
+#aws s3 cp ${CONFBUCKET}/krb5.conf /etc/krb5.conf
 aws s3 cp ${CONFBUCKET}/MailScanner/defaults /etc/MailScanner/defaults
 aws s3 cp ${CONFBUCKET}/MailScanner/conf.d/ /etc/MailScanner/conf.d/ --recursive
 aws s3 cp ${CONFBUCKET}/clamav/scan.conf /etc/clamd.d/scan.conf
 aws s3 cp ${CONFBUCKET}/dovecot/dovecot.conf /etc/dovecot/dovecot.conf
 aws s3 cp ${CONFBUCKET}/dovecot/conf.d/ /etc/dovecot/conf.d/ --recursive
 aws s3 cp ${CONFBUCKET}/postfix/ /etc/postfix/ --recursive
-aws s3 cp ${CONFBUCKET}/pam.d/dovecot /etc/pam.d/dovecot
-aws s3 cp ${CONFBUCKET}/opendkim/default /etc/opendkim/keys/${MYDOMAIN}/default
+#aws s3 cp ${CONFBUCKET}/pam.d/dovecot /etc/pam.d/dovecot
+#aws s3 cp ${CONFBUCKET}/opendkim/default /etc/opendkim/keys/${MYDOMAIN}/default # moved to Secrets Manager
 aws s3 cp ${CONFBUCKET}/checkclam.sh /home/centos/
+
+# get secrets from Secrets Manager (LDAP passwords, DKIM private key)
+# DKIM private key:
+aws secretsmanager --region ${MYREGION} get-secret-value \
+    --secret-id "${MYDOMAIN}/default.private" --query "SecretString" --output text \
+    | jq -r '.default' >> /etc/opendkim/keys/${MYDOMAIN}/default
+
+# LDAP bind password for postfix
+echo '' >> /etc/postfix/ldap-users.cf
+echo -n 'bind_pw=' >> /etc/postfix/ldap-users.cf
+aws secretsmanager --region ${MYREGION} get-secret-value \
+    --secret-id "jumpcloud_ldap_pw" --query "SecretString" --output text \
+    | jq -r '.ldap_bind_pwd' >> /etc/postfix/ldap-users.cf
 
 chmod u+x /home/centos/checkclam.sh
 
@@ -108,19 +121,20 @@ chmod 600 /etc/opendkim/keys/${MYDOMAIN}/default
 aws ec2 associate-address --region ${MYREGION} --instance-id ${MYINSTANCEID} --public-ip ${MYPUBLICIP}
 ###
 
+sleep 10 # wait for AWS to catch up before next step
+
 # Get cert:
 #
 ### NEED TO ENSURE EIP ASSOCIATED WITH THIS NEW HOST BEFORE THIS LINE
-#/bin/certbot certonly -n --agree-tos --rsa-key-size 4096 --renew-by-default -m tony@mulini.org --standalone -d mailhub.${MYDOMAIN}
 # Get cert using acme.sh now
 # Fix for old certbot dirs:
-mkdir -p /etc/letsencrypt/live/mailhub.${MYDOMAIN}
+mkdir -p /etc/letsencrypt/live/mailhub
 # Update account email:
 #/root/.acme.sh/acme.sh --update-account --accountemail tony@mulini.org
 # Standalone cert request:
 /root/.acme.sh/acme.sh --issue --standalone -k 4096  \
-    --key-file /etc/letsencrypt/live/mailhub.${MYDOMAIN}/privkey.pem \
-    --fullchain-file /etc/letsencrypt/live/mailhub.${MYDOMAIN}/fullchain.pem \
+    --key-file /etc/letsencrypt/live/mailhub/privkey.pem \
+    --fullchain-file /etc/letsencrypt/live/mailhub/fullchain.pem \
     -d mailhub.${MYDOMAIN}
 # TO DO: better protect privkey.pem so can only be read by dovecot & postfix
 
