@@ -1,8 +1,8 @@
 # MailScanner config file for mailhub
 
-%org-name% = Mulini.net # Interpolate
-%org-long-name% = The Mills/Taylor Family # Interpolate
-%web-site% = www.mulini.net # Interpolate
+%org-name% = ${domain_name}
+%org-long-name% = ${MS-org-long-name}
+%web-site% = www.${domain_name}
 Run As User = postfix
 Run As Group = postfix
 Incoming Queue Dir = /var/spool/postfix/hold
