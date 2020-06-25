@@ -31,9 +31,8 @@
 				
 				"sudo yum update -y",
 				
-                "sudo yum install krb5-workstation pam_krb5 -y",
                 "sudo amazon-linux-extras install epel -y",
-				"sudo yum install git dovecot socat opendkim -y",
+				"sudo yum install git dovecot socat opendkim jq -y",
                 "sudo curl https://get.acme.sh | sudo sh",
 				
 				"sudo curl https://d1wk0tztpsntt1.cloudfront.net/linux/latest/install -O",
