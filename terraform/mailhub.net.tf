@@ -177,6 +177,10 @@ resource "aws_efs_file_system" "main_efs" {
 
   # Use default EFS key for now
 
+  lifecycle_policy {
+    transition_to_ia = "AFTER_7_DAYS"
+  }
+
   tags = {
     Name = "${terraform.workspace}-mailstore-main"
   }
@@ -198,6 +202,10 @@ resource "aws_efs_file_system" "backup_efs" {
   encrypted = true
 
   # Use default EFS key for now
+
+  lifecycle_policy {
+    transition_to_ia = "AFTER_7_DAYS"
+  }
 
   tags = {
     Name = "${terraform.workspace}-mailstore-backup"
