@@ -4,7 +4,7 @@
 # Remember this!
 
 provider "aws" {
-  region = var.region
+  region = "eu-west-1"
 }
 
 locals {
@@ -222,14 +222,9 @@ resource "aws_efs_mount_target" "backup_efs_mount_target2" {
   subnet_id      = aws_subnet.sn_imap_eu2.id
 }
 
-# Use our own CentOS 7 AMI with pre-installed packages (in particular MailScanner)
-# instead of the main Centos AMI
+# Use our own ALIN2 AMI with pre-installed packages (in particular MailScanner)
 
-output "desc" {
-  value = data.aws_ami.centos.name
-}
-
-data "aws_ami" "centos" {
+data "aws_ami" "mailhub_ami" {
   most_recent = true
 
   filter {
@@ -242,29 +237,21 @@ data "aws_ami" "centos" {
 
 # Create mailhub server:
 
-resource "aws_instance" "mailhub" {
-  ami                         = data.aws_ami.centos.id
-  instance_type               = "t3.medium"
-  subnet_id                   = aws_subnet.sn_imap_eu1.id
-  associate_public_ip_address = true
-  vpc_security_group_ids = [
+module "mailhub" {
+  source = "../modules/mailhub"
+
+  domain_name = local.domain_name
+  mailhub_subnet_id                   = aws_subnet.sn_imap_eu1.id
+  mailhub_sg_list = [
     aws_security_group.sg_access_from_home1.id,
     aws_security_group.sg_internet_to_mailhub.id,
     aws_security_group.default.id,
   ]
-  key_name             = var.mykp
-  iam_instance_profile = var.mailhub_instp
-  root_block_device {
-    volume_type = "gp2"
-  }
+  mykp = var.mykp
+  mailhub_instp = var.mailhub_instp
+  main_efs_fqdn = aws_efs_file_system.main_efs.dns_name
+  backup_efs_fqdn = aws_efs_file_system.backup_efs.dns_name
 
-  user_data = file("../mailhub-aws-alin2-user-data")
-
-  tags = {
-    Name                 = "mailhub.${terraform.workspace}"
-    MailstoreMount       = aws_efs_file_system.main_efs.dns_name
-    BackupMailstoreMount = aws_efs_file_system.backup_efs.dns_name
-    Inspector            = "InspectMe"
-  }
 }
+
 
