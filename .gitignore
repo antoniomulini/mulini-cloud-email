@@ -1,4 +1,3 @@
-configfiles.mulini.org/*
 configfiles/dovecot/.orig/*
 configfiles*/opendkim/*
 configfiles*/postfix/*
