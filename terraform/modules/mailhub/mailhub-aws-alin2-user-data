@@ -135,7 +135,7 @@ mkdir -p /etc/letsencrypt/live/mailhub
 /root/.acme.sh/acme.sh --issue --standalone -k 4096  \
     --key-file /etc/letsencrypt/live/mailhub/privkey.pem \
     --fullchain-file /etc/letsencrypt/live/mailhub/fullchain.pem \
-    -d mailhub.${MYDOMAIN}
+    --server letsencrypt -d mailhub.${MYDOMAIN}
 # TO DO: better protect privkey.pem so can only be read by dovecot & postfix
 
 # Start stuff:
