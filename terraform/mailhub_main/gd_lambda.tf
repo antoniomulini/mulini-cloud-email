@@ -2,15 +2,15 @@
 
 data "archive_file" "zipit" {
   type        = "zip"
-  source_file = "../lambda/gd_alerts/processGDAlert.py"
-  output_path = "../lambda/gd_alerts/processGDAlert.zip"
+  source_file = "../../lambda/gd_alerts/processGDAlert.py"
+  output_path = "../../lambda/gd_alerts/processGDAlert.zip"
 }
 
 data "aws_caller_identity" "current" {
 }
 
 resource "aws_lambda_function" "processGDAlert" {
-  filename         = "../lambda/gd_alerts/processGDAlert.zip"
+  filename         = "../../lambda/gd_alerts/processGDAlert.zip"
   source_code_hash = data.archive_file.zipit.output_base64sha256
   function_name    = "processGDAlert"
   publish          = true

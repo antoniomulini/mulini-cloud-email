@@ -1,13 +1,12 @@
-configfiles.mulini.org/*
 configfiles/dovecot/.orig/*
 configfiles*/opendkim/*
 configfiles*/postfix/*
 configfiles*/checkclam.sh
 configfiles*/krb5.conf
 configfiles*/mulini.*
-terraform/.terraform/*
-terraform/*.tfstate*
-terraform/personal.auto.tfvars
+.terraform
+*.tfstate*
+personal.auto.tfvars
 terraform/test/*
 dkim_notes.txt
 s3synccmd.sh
