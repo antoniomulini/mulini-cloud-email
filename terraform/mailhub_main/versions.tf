@@ -13,4 +13,11 @@ terraform {
       source = "hashicorp/template"
     }
   }
+
+  backend "s3" {
+    bucket = "mailhub-statebucket"
+    key = "mailhub"
+    region = "eu-west-1"
+    encrypt = true
+  }
 }
