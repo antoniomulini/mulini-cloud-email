@@ -5,6 +5,7 @@ configfiles*/checkclam.sh
 configfiles*/krb5.conf
 configfiles*/mulini.*
 .terraform
+.terraform_old
 *.tfstate*
 personal.auto.tfvars
 terraform/test/*

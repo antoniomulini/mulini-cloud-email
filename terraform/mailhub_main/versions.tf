@@ -6,7 +6,7 @@ terraform {
       source = "hashicorp/archive"
     }
     aws = {
-      source = "registry.terraform.io/-/aws"
+      source  = "hashicorp/aws"
       version = ">= 2.7.0"
     }
     template = {
@@ -15,9 +15,9 @@ terraform {
   }
 
   backend "s3" {
-    bucket = "mailhub-statebucket"
-    key = "mailhub"
-    region = "eu-west-1"
+    bucket  = "mailhub-statebucket"
+    key     = "mailhub"
+    region  = "eu-west-1"
     encrypt = true
   }
 }
