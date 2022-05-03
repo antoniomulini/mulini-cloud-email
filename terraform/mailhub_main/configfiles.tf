@@ -3,17 +3,10 @@
 
 ### Dovecot config files
 
-data "template_file" "dovecot_ldap_conf" {
-  template = file("../../configfiles/dovecot/conf.d/dovecot-ldap.conf.ext.tpl")
-  vars = {
-    jumpcloud_org = var.jumpcloud_org
-  }
-}
-
 resource "aws_s3_bucket_object" "dovecot_ldap_conf" {
   bucket  = "${local.domain_name}-configfiles"
   key     = "dovecot/conf.d/dovecot-ldap.conf.ext"
-  content = data.template_file.dovecot_ldap_conf.rendered
+  content = templatefile("../../configfiles/dovecot/conf.d/dovecot-ldap.conf.ext.tpl", {jumpcloud_org = var.jumpcloud_org})
 }
 
 resource "aws_s3_bucket_object" "other_dovecot_configs" {
@@ -31,18 +24,13 @@ resource "aws_s3_bucket_object" "dovecot-conf" {
 
 ### MailScanner config files
 
-data "template_file" "MailScanner_local_conf" {
-  template = file("../../configfiles/MailScanner/conf.d/local.conf.tpl")
-  vars = {
-    domain_name = local.domain_name
-    MS-org-long-name = var.MS-org-long-name
-  }
-}
-
 resource "aws_s3_bucket_object" "MailScanner_local_conf" {
   bucket  = "${local.domain_name}-configfiles"
   key     = "MailScanner/conf.d/local.conf"
-  content = data.template_file.MailScanner_local_conf.rendered
+  content = templatefile("../../configfiles/MailScanner/conf.d/local.conf.tpl", {
+    domain_name = local.domain_name
+    MS-org-long-name = var.MS-org-long-name
+  })
 }
 
 resource "aws_s3_bucket_object" "MailScanner_defaults" {
@@ -61,30 +49,16 @@ resource "aws_s3_bucket_object" "clamav_scan_conf" {
 
 ### Postfix config files
 
-data "template_file" "postfix_ldap_users_cf" {
-  template = file("../../configfiles/postfix/ldap-users.cf.tpl")
-  vars = {
-    jumpcloud_org = var.jumpcloud_org
-  }
-}
-
 resource "aws_s3_bucket_object" "postfix_ldap_users_cf" {
   bucket  = "${local.domain_name}-configfiles"
   key     = "postfix/ldap-users.cf"
-  content = data.template_file.postfix_ldap_users_cf.rendered
-}
-
-data "template_file" "postfix_main_cf" {
-  template = file("../../configfiles/postfix/main.cf.tpl")
-  vars = {
-    domain_name = local.domain_name
-  }
+  content = templatefile("../../configfiles/postfix/ldap-users.cf.tpl", {jumpcloud_org = var.jumpcloud_org})
 }
 
 resource "aws_s3_bucket_object" "postfix_main_cf" {
   bucket  = "${local.domain_name}-configfiles"
   key     = "postfix/main.cf"
-  content = data.template_file.postfix_main_cf.rendered
+  content = templatefile("../../configfiles/postfix/main.cf.tpl", {domain_name = local.domain_name})
 }
 
 resource "aws_s3_bucket_object" "other_postfix_files" {
