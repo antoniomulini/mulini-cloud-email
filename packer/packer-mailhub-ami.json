@@ -35,10 +35,10 @@
 				"sudo yum install git dovecot socat opendkim jq -y",
                 "sudo curl https://get.acme.sh | sudo sh",
 				
-				"sudo curl https://s3.amazonaws.com/msv5/release/MailScanner-5.1.3-2.rhel.tar.gz -O",
-                "sudo tar -zxvf MailScanner-5.1.3-2.rhel.tar.gz",
+				"sudo curl https://github.com/MailScanner/v5/releases/download/5.4.4-1/MailScanner-5.4.4-1.rhel.noarch.rpm -O -L",
+                "sudo yum install ./MailScanner-5.4.4-1.rhel.noarch.rpm -y",
                 "sudo echo \"release 7\" | sudo tee -a /etc/redhat-release",
-				"sudo MailScanner-5.1.3-2/install.sh --MTA=postfix --installEPEL=Y --installClamav=Y --configClamav=Y --installTNEF=Y --installUnrar=Y  --installCPAN=Y --installDf=Y --SELPermissive=Y --ignoreDeps=N --ramdiskSize=0",
+				"sudo /usr/sbin/ms-configure --MTA=postfix --installEPEL=Y --installClamav=Y --configClamav=Y --installTNEF=Y --installUnrar=Y  --installCPAN=Y --installDf=Y --SELPermissive=Y --ignoreDeps=N --ramdiskSize=0",
                 
 				"sudo curl https://s3.amazonaws.com/amazoncloudwatch-agent/amazon_linux/amd64/latest/amazon-cloudwatch-agent.rpm -O",
 				"sudo rpm -U ./amazon-cloudwatch-agent.rpm",
