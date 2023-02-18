@@ -1,7 +1,7 @@
 variable "instance_type" {
     description = "Instance type for mailhub server"
     type = string
-    default = "t3.medium"
+    default = "t4g.medium"
 }
 
 variable "domain_name" {

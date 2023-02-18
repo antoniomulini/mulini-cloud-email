@@ -5,14 +5,14 @@
     "builders": [
         {
             "ami_name": "mulini-mailhub-ami-{{timestamp}}",
-            "instance_type": "t3.medium",
+            "instance_type": "t4g.medium",
             "region": "{{user `region`}}",
             "source_ami_filter": {
               "filters": {
                 "name": "amzn2-ami-hvm-*-gp2",
                 "virtualization-type": "hvm",
                 "root-device-type": "ebs",
-                "architecture": "x86_64"
+                "architecture": "arm64"
               },
               "owners": ["amazon"],
               "most_recent": true
@@ -32,15 +32,15 @@
 				"sudo yum update -y",
 				
                 "sudo amazon-linux-extras install epel -y",
-				"sudo yum install git dovecot socat opendkim jq -y",
+				"sudo yum install git dovecot socat opendkim jq spamassassin -y",
                 "sudo curl https://get.acme.sh | sudo sh",
 				
-				"sudo curl https://github.com/MailScanner/v5/releases/download/5.4.4-1/MailScanner-5.4.4-1.rhel.noarch.rpm -O -L",
-                "sudo yum install ./MailScanner-5.4.4-1.rhel.noarch.rpm -y",
+				"sudo curl https://github.com/MailScanner/v5/releases/download/5.4.5-3/MailScanner-5.4.5-3.rhel.noarch.rpm -O -L",
+                "sudo yum install ./MailScanner-5.4.5-3.rhel.noarch.rpm -y",
                 "sudo echo \"release 7\" | sudo tee -a /etc/redhat-release",
 				"sudo /usr/sbin/ms-configure --MTA=postfix --installEPEL=Y --installClamav=Y --configClamav=Y --installTNEF=Y --installUnrar=Y  --installCPAN=Y --installDf=Y --SELPermissive=Y --ignoreDeps=N --ramdiskSize=0",
                 
-				"sudo curl https://s3.amazonaws.com/amazoncloudwatch-agent/amazon_linux/amd64/latest/amazon-cloudwatch-agent.rpm -O",
+				"sudo curl https://s3.amazonaws.com/amazoncloudwatch-agent/amazon_linux/arm64/latest/amazon-cloudwatch-agent.rpm -O",
 				"sudo rpm -U ./amazon-cloudwatch-agent.rpm",
 				
 				"sudo curl https://raw.githubusercontent.com/antoniomulini/mulini-cloud-email/master/backupmail.sh -O",
