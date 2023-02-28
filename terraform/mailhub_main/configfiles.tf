@@ -72,7 +72,7 @@ resource "aws_s3_bucket_object" "other_postfix_files" {
 
 resource "aws_s3_bucket_object" "other_config_files" {
   bucket  = "${local.domain_name}-configfiles"
-  for_each = fileset("../../configfiles", "{*.sh,*.json}")
+  for_each = fileset("../../configfiles", "{*.sh,*.json,${local.domain_name}.aliases}")
   key = "/${each.value}"
   source = "../../configfiles/${each.value}"
 }
