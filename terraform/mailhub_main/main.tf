@@ -94,6 +94,13 @@ resource "aws_security_group" "sg_internet_to_mailhub" {
   }
 
   ingress {
+    from_port   = "587"
+    to_port     = "587"
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
     from_port   = "993"
     to_port     = "993"
     protocol    = "tcp"
