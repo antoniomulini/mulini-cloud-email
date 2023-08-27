@@ -1,6 +1,5 @@
 configfiles/dovecot/.orig/*
 configfiles*/opendkim/*
-configfiles*/postfix/*
 configfiles*/checkclam.sh
 configfiles*/krb5.conf
 configfiles*/mulini.*
