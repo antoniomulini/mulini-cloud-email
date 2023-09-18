@@ -16,7 +16,7 @@ resource "aws_lambda_function" "processGDAlert" {
   publish          = true
   handler          = "processGDAlert.lambda_handler"
   role             = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/lambda_GDAlert"
-  runtime          = "python2.7"
+  runtime          = "python3.9"
 }
 
 resource "aws_lambda_permission" "processGDAlert_allowCWE" {

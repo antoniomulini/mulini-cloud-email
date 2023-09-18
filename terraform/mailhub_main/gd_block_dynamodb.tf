@@ -5,7 +5,7 @@ resource "aws_dynamodb_table" "gd_block_table" {
   read_capacity  = 5
   write_capacity = 5
   hash_key       = "nacl_id"    # Text ID of the NACL that is blocking the scanners
-  range_key      = "nacl_entry" # NACL entry in format nacl-rule-n, or 'nacl-state' for NACL state info
+  range_key      = "nacl_entry" # NACL entry in format nacl_rule_n, or 'nacl_state' for NACL state info
 
   attribute {
     name = "nacl_id"

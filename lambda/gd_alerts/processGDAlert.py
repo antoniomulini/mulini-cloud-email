@@ -1,9 +1,12 @@
-from __future__ import print_function
 import json
 import sys
 import boto3
+from botocore.exceptions import ClientError
+import time
+from datetime import date
 
 sns_topic_arn = "arn:aws:sns:eu-west-1:432173269038:GuardDuty_alerts"
+table_name = "gdBlockNACLs"
 
 def lambda_handler(event, context):
     # parsed = json.load(event)
@@ -66,6 +69,8 @@ def dealwith_portprobe(event):
         message += "\n  Local service probed: "+ str(int(badguy['localPortDetails']['port']))+" ("+badguy['localPortDetails']['portName']+")"
         badguysIPs.append(badguy['remoteIpDetails']['ipAddressV4'])
 
+        add_to_block_NACL(badguy['remoteIpDetails']['ipAddressV4'])
+
     # print(message)
     # send SNS message:
     client = boto3.client('sns')
@@ -74,7 +79,75 @@ def dealwith_portprobe(event):
         Subject = 'Guard Duty Alert: '+name+' is being probed on an open port by a known malicious IP',
         Message = message
     )
+
+
     return response
+
+def add_to_block_NACL(ipAddress):
+    # Get gdBlockCounter from nacl_state
+    # For entry nacl_rule_<gdBlockCounter>, add ipAddress to cidrBlock field; add date to dateBlocked field
+    # increment gdBlockCounter in nacl_state.  If gdBlockCounter = gdBlockEndAt, then gdBlockCounter = gdBlockStartAt
+
+    resource = boto3.resource('dynamodb')
+    # Check table exists and load it
+    try:
+        table = resource.Table(table_name)
+        table.load()
+    except ClientError as err:
+        if err.response['Error']['Code'] == 'ResourceNotFoundException':
+            print(f"Table name {table_name} not found")
+        else:
+            print(f"Couldn't check for existence of {table_name}. Here's why: {err.response['Error']['Code']}: {err.response['Error']['Message']}")
+        raise
+
+    # To Do: check ipAddress isn't already in our NACL
+
+    # Get nacl_state entry
+    try:
+        response = table.get_item(Key={'nacl_id': 'acl-07116746e62b32a9d', 'nacl_entry': 'nacl_state'})
+    except ClientError as err:
+        print(f"Couldn't get nacl_entry from {table_name}.  Here's why: {err.response['Error']['Code']}: {err.response['Error']['Message']}")
+        raise
+
+    gdBlockCounter = response['Item']['gdBlockCounter']
+    gdBlockEndAt = response['Item']['gdBlockEndAt']
+    gdBlockStartAt = response['Item']['gdBlockStartAt']
+
+    # Create table entry:
+    new_entry = {
+        'nacl_id': 'acl-07116746e62b32a9d',
+        'nacl_entry': f'nacl_rule_{gdBlockCounter}',
+        'cidrBlock': f'{ipAddress}/32',
+        'dateBlocked': f'{time.time()}'
+    }
+    print(json.dumps(new_entry, indent=4))
+
+    # Add entry:
+    try:
+        table.put_item(Item=new_entry)
+    except ClientError as err:
+        print(f"Couldn't add new NACL item.  Here's why: {err.response['Error']['Code']}: {err.response['Error']['Message']}")
+        raise
+
+    gdBlockCounter += 1
+    if gdBlockCounter == gdBlockEndAt:
+        gdBlockCounter = gdBlockStartAt
+    
+    # Write new nacl_state entry:
+    try:
+        response = table.update_item(Key={'nacl_id': 'acl-07116746e62b32a9d', 'nacl_entry': 'nacl_state'},
+            UpdateExpression = "set gdBlockCounter=:g",
+            ExpressionAttributeValues = {':g': gdBlockCounter},
+            ReturnValues="UPDATED_NEW"
+        )
+    except ClientError as err:
+        print(f"Couldn't update nacl_state entry.  Here's why: {err.response['Error']['Code']}: {err.response['Error']['Message']}")
+        raise
+    
+    print(response['Attributes'])
+
+    return response['Attributes']
+
 
 if __name__ == "__main__":
     testEvent = json.loads(sys.stdin.read())
