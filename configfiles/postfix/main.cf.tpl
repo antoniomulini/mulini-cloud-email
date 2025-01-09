@@ -714,3 +714,4 @@ non_smtpd_milters       = \$smtpd_milters
 milter_default_action   = accept
 milter_protocol= 2
 
+message_size_limit = 25600000
