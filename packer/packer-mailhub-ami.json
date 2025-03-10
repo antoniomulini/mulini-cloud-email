@@ -43,7 +43,7 @@
 				"sudo curl https://s3.amazonaws.com/amazoncloudwatch-agent/amazon_linux/arm64/latest/amazon-cloudwatch-agent.rpm -O",
 				"sudo rpm -U ./amazon-cloudwatch-agent.rpm",
 				
-				"sudo curl https://raw.githubusercontent.com/antoniomulini/mulini-cloud-email/master/backupmail.sh -O",
+				"sudo curl https://raw.githubusercontent.com/antoniomulini/mulini-cloud-email/main/backupmail.sh -O",
 				"sudo chmod +x ./backupmail.sh",
 				
 				"sudo echo \"\" | sudo tee -a /etc/ssh/sshd_config > /dev/null",

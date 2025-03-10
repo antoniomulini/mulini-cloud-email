@@ -11,10 +11,12 @@ terraform/test/*
 dkim_notes.txt
 s3synccmd.sh
 temp
-lambda/gd_alerts/processGDAlert.zip
+*.zip
 .vscode/settings.json
 lambda/gd_alerts/ex2
 lambda/gd_alerts/example
 lambda/gd_alerts/example2
 lambda/gd_alerts/example_formatted
 packer/runpacker.cli
+__pycache__
+*.pyc
